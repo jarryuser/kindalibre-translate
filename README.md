@@ -1,10 +1,10 @@
 <div align="center">
 
-# Libre Translate
+# Kindalibre Translate
 
-**A minimal, key-free browser translator powered by the LibreTranslate API - no backend, deployable on GitHub Pages in one command**
+**A "kinda libre" browser translator powered by the LibreTranslate API - no backend, deployable on GitHub Pages in one command**
 
-[![Live Demo](https://img.shields.io/badge/Live%20Demo-→-2f81f7?style=flat-square)](https://jarryuser.github.io/libretranslate/)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-→-2f81f7?style=flat-square)](https://jarryuser.github.io/kindalibre-translate/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.3-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Vite](https://img.shields.io/badge/Vite-5-646CFF?style=flat-square&logo=vite&logoColor=white)](https://vitejs.dev/)
 [![LibreTranslate](https://img.shields.io/badge/Powered%20by-LibreTranslate-2f81f7?style=flat-square)](https://libretranslate.com/)
@@ -16,13 +16,13 @@
 
 ## Overview
 
-Libre Translate is a front-end translator that calls the **LibreTranslate API** directly from the browser. There is no server, no database and no build-time secrets - the whole app is a handful of static files
+Kindalibre Translate is a front-end translator that calls the **LibreTranslate API** directly from the browser. There is no server, no database and no build-time secrets - the whole app is a handful of static files
 
 Type or paste text, pick a target language, hit **Translate**. Supports auto-detection, live translation, language swapping, copy, text-to-speech and 50+ languages from the same list LibreTranslate itself uses
 
 The app talks to any LibreTranslate instance and is CORS-ready. The default is `translate.libregalaxy.org`, a free community mirror that needs no API key. The official `libretranslate.com` is paid, but you can point the app at any self-hosted or community instance in **Settings**
 
-**Try it:** [libretranslate.jarryuser.github.io](https://jarryuser.github.io/libretranslate/)
+**Try it:** [kindalibre-translate.jarryuser.github.io](https://jarryuser.github.io/kindalibre-translate/)
 
 ---
 
@@ -83,8 +83,8 @@ The app defaults to `https://translate.libregalaxy.org`, a free community mirror
 ## Getting started
 
 ```bash
-git clone https://github.com/jarryuser/libretranslate.git
-cd libretranslate
+git clone https://github.com/jarryuser/kindalibre-translate.git
+cd kindalibre-translate
 npm install
 
 npm run dev    # → http://localhost:5173
@@ -98,7 +98,7 @@ npm run dev    # → http://localhost:5173
 npm run deploy
 ```
 
-Builds the app and pushes `dist/` to the `gh-pages` branch with `gh-pages`. The live site updates at `https://jarryuser.github.io/libretranslate/` in ~30 seconds
+Builds the app and pushes `dist/` to the `gh-pages` branch with `gh-pages`. The live site updates at `https://jarryuser.github.io/kindalibre-translate/` in ~30 seconds
 
 If you fork the repo, the `base` path in `vite.config.ts` must match your GitHub Pages subpath
 
@@ -107,7 +107,7 @@ If you fork the repo, the `base` path in `vite.config.ts` must match your GitHub
 ## Project structure
 
 ```
-libretranslate/
+kindalibre-translate/
 ├── index.html                 - single HTML shell
 ├── src/
 │   ├── api.ts                 - LibreTranslate client (languages, settings, translate)

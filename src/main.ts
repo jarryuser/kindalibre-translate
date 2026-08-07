@@ -26,11 +26,11 @@ const saveSettingsBtn = document.getElementById('save-settings-btn') as HTMLButt
 const resetSettingsBtn = document.getElementById('reset-settings-btn') as HTMLButtonElement;
 const settingsStatus = document.getElementById('settings-status') as HTMLElement;
 
-const SOURCE_STORAGE = 'libretranslate:source';
-const TARGET_STORAGE = 'libretranslate:target';
-const LIVE_STORAGE = 'libretranslate:live';
-const THEME_STORAGE = 'libretranslate:theme';
-const ALT_STORAGE = 'libretranslate:alternatives';
+const SOURCE_STORAGE = 'kindalibre:source';
+const TARGET_STORAGE = 'kindalibre:target';
+const LIVE_STORAGE = 'kindalibre:live';
+const THEME_STORAGE = 'kindalibre:theme';
+const ALT_STORAGE = 'kindalibre:alternatives';
 const DEFAULT_TARGET = 'en';
 
 let languages: Language[] = [];
@@ -281,8 +281,8 @@ async function saveSettings(): Promise<void> {
 function resetSettings(): void {
   apiKeyInput.value = '';
   apiUrlInput.value = DEFAULT_INSTANCE;
-  localStorage.removeItem('libretranslate:key');
-  localStorage.removeItem('libretranslate:url');
+  localStorage.removeItem('kindalibre:key');
+  localStorage.removeItem('kindalibre:url');
   saveSettings();
 }
 

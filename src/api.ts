@@ -23,8 +23,8 @@ export const AUTO_CODE = 'auto';
 export const DEFAULT_INSTANCE = 'https://translate.libregalaxy.org';
 const LEGACY_DEFAULT = 'https://libretranslate.com';
 
-const KEY_STORAGE = 'libretranslate:key';
-const URL_STORAGE = 'libretranslate:url';
+const KEY_STORAGE = 'kindalibre:key';
+const URL_STORAGE = 'kindalibre:url';
 
 function trimSlash(url: string): string {
   return url.replace(/\/+$/, '');
