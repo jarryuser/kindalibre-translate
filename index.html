@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Libre Translate</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%232f81f7'><path d='M12.87 15.07l-2.54-2.51.03-.03A17.52 17.52 0 0 0 14.07 6H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12zm-2.62 7l1.62-4.33L19.12 17h-3.24z'/></svg>" />
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <div class="brand">
+        <svg class="brand-logo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10A15.3 15.3 0 0 1 12 2z" />
+          <path d="M2 12h20" />
+          <path d="M12 2c2.5 2.4 4 7 4 10s-1.5 7.6-4 10c-2.5-2.4-4-7-4-10s1.5-7.6 4-10z" />
+        </svg>
+        <div>
+          <h1 class="brand-title">Libre Translate</h1>
+          <p class="brand-sub">Free machine translation powered by LibreTranslate</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <a class="btn btn-ghost" href="https://github.com/jarryuser/libretranslate" target="_blank" rel="noopener">
+          <svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor" aria-hidden="true">
+            <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z" />
+          </svg>
+          <span>GitHub</span>
+        </a>
+        <button id="theme-btn" class="btn btn-ghost" title="Toggle theme" aria-label="Toggle theme">☾</button>
+      </div>
+    </header>
+
+    <section class="translator">
+      <div class="controls">
+        <div class="lang-group">
+          <label class="lang-label" for="source-lang">Source</label>
+          <div class="select-wrap">
+            <select id="source-lang"></select>
+          </div>
+        </div>
+
+        <button id="swap-btn" class="btn btn-icon" title="Swap languages (⇅)" aria-label="Swap languages">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M17 2l4 4-4 4" />
+            <path d="M3 11v-1a4 4 0 0 1 4-4h14" />
+            <path d="M7 22l-4-4 4-4" />
+            <path d="M21 13v1a4 4 0 0 1-4 4H3" />
+          </svg>
+        </button>
+
+        <div class="lang-group">
+          <label class="lang-label" for="target-lang">Target</label>
+          <div class="select-wrap">
+            <select id="target-lang"></select>
+          </div>
+        </div>
+
+        <label class="live-toggle" title="Translate as you type">
+          <input type="checkbox" id="live-toggle" />
+          <span class="switch"></span>
+          <span>Live</span>
+        </label>
+      </div>
+
+      <div class="panes">
+        <div class="pane">
+          <div class="pane-toolbar">
+            <span id="detected-lang" class="detected"></span>
+            <span class="pane-spacer"></span>
+            <button id="clear-btn" class="btn btn-mini" title="Clear text">Clear</button>
+          </div>
+          <textarea id="source-text" class="textarea" placeholder="Type or paste text to translate…" spellcheck="false"></textarea>
+          <div class="pane-footer">
+            <span id="char-count" class="char-count">0</span>
+            <span class="pane-spacer"></span>
+            <span id="char-limit" class="char-limit"></span>
+          </div>
+        </div>
+
+        <div class="pane">
+          <div class="pane-toolbar">
+            <span id="status-badge" class="status-badge">Idle</span>
+            <span class="pane-spacer"></span>
+            <button id="copy-btn" class="btn btn-mini" title="Copy translation">Copy</button>
+            <button id="speak-btn" class="btn btn-mini" title="Listen to translation">Listen</button>
+          </div>
+          <textarea id="target-text" class="textarea textarea-readonly" placeholder="Translation appears here" readonly spellcheck="false"></textarea>
+          <div class="pane-footer">
+            <span id="error-msg" class="error-msg"></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button id="translate-btn" class="btn btn-primary">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 2l2.4 6.6L21 11l-6.6 2.4L12 20l-2.4-6.6L3 11l6.6-2.4z" />
+          </svg>
+          <span>Translate</span>
+          <kbd class="hint">Ctrl↵</kbd>
+        </button>
+      </div>
+    </section>
+
+    <details class="settings" id="settings">
+      <summary>
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="3" />
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+        </svg>
+        Settings
+      </summary>
+      <div class="settings-body">
+        <div class="field">
+          <label for="api-key">API key</label>
+          <input id="api-key" type="password" placeholder="Optional - required by libretranslate.com" autocomplete="off" spellcheck="false" />
+          <p class="field-hint">libretranslate.com now requires a free key. Get one at <a href="https://portal.libretranslate.com" target="_blank" rel="noopener">portal.libretranslate.com</a>. The key is stored only in your browser (localStorage). Some community instances work without a key.</p>
+        </div>
+        <div class="field">
+          <label for="api-url">API instance URL</label>
+          <input id="api-url" type="text" placeholder="https://libretranslate.com" autocomplete="off" spellcheck="false" />
+          <p class="field-hint">Point to any LibreTranslate instance, e.g. <code>https://libretranslate.com</code> or a self-hosted one.</p>
+        </div>
+        <div class="field-actions">
+          <button id="save-settings-btn" class="btn btn-secondary">Save</button>
+          <button id="reset-settings-btn" class="btn btn-ghost">Reset to defaults</button>
+          <span id="settings-status" class="settings-status"></span>
+        </div>
+      </div>
+    </details>
+
+    <footer class="footer">
+      <span id="instance-info" class="muted"></span>
+      <span class="dot">·</span>
+      <span id="key-info" class="muted"></span>
+      <span class="dot">·</span>
+      <span class="muted">Powered by <a href="https://github.com/LibreTranslate/LibreTranslate" target="_blank" rel="noopener">LibreTranslate</a></span>
+    </footer>
+  </div>
+
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>
