@@ -87,6 +87,7 @@
             <button id="speak-btn" class="btn btn-mini" title="Listen to translation">Listen</button>
           </div>
           <textarea id="target-text" class="textarea textarea-readonly" placeholder="Translation appears here" readonly spellcheck="false"></textarea>
+          <div id="alternatives" class="alternatives"></div>
           <div class="pane-footer">
             <span id="error-msg" class="error-msg"></span>
           </div>
@@ -101,6 +102,19 @@
           <span>Translate</span>
           <kbd class="hint">Ctrl↵</kbd>
         </button>
+        <label class="variants" title="Number of alternative translations to request">
+          <span>Variants</span>
+          <div class="select-wrap select-wrap-small">
+            <select id="alternatives-count">
+              <option value="0">Off</option>
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+              <option value="5">5</option>
+            </select>
+          </div>
+        </label>
       </div>
     </section>
 

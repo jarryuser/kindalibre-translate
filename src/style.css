@@ -302,7 +302,64 @@ select:focus-visible, textarea:focus-visible, input:focus-visible {
 
 /* Actions */
 
-.actions { padding: 14px 16px; border-top: 1px solid var(--border-soft); }
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border-top: 1px solid var(--border-soft);
+}
+
+.variants {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+  font-size: 13px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.select-wrap-small { width: 76px; }
+.select-wrap-small select { padding: 7px 28px 7px 10px; font-size: 13px; }
+
+/* Alternatives */
+
+.alternatives {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 0 14px 10px;
+  border-top: 1px dashed var(--border-soft);
+}
+
+.alternatives[hidden] { display: none; }
+
+.alt-title {
+  font-size: 12px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: .4px;
+  padding-top: 10px;
+}
+
+.alt-option {
+  text-align: left;
+  padding: 8px 10px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-size: 14px;
+  font-family: inherit;
+  line-height: 1.5;
+  cursor: pointer;
+  transition: border-color .15s, background .15s;
+}
+
+.alt-option:hover { border-color: var(--accent); background: var(--accent-soft); }
+
+.alt-option.selected { border-color: var(--accent); background: var(--accent-soft); }
 
 /* Settings */
 

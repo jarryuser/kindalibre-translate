@@ -1,9 +1,11 @@
-import { AUTO_CODE, DEFAULT_INSTANCE, fetchLanguages, fetchSettings, getApiKey, getApiUrl, saveApiKey, saveApiUrl, translate, type Language } from './api.js';
+import { AUTO_CODE, DEFAULT_INSTANCE, fetchLanguages, fetchSettings, getApiKey, getApiUrl, saveApiKey, saveApiUrl, translate, type Language, type TranslateResult } from './api.js';
 
 const sourceSelect = document.getElementById('source-lang') as HTMLSelectElement;
 const targetSelect = document.getElementById('target-lang') as HTMLSelectElement;
 const sourceText = document.getElementById('source-text') as HTMLTextAreaElement;
 const targetText = document.getElementById('target-text') as HTMLTextAreaElement;
+const alternativesEl = document.getElementById('alternatives') as HTMLElement;
+const alternativesCountEl = document.getElementById('alternatives-count') as HTMLSelectElement;
 const translateBtn = document.getElementById('translate-btn') as HTMLButtonElement;
 const swapBtn = document.getElementById('swap-btn') as HTMLButtonElement;
 const copyBtn = document.getElementById('copy-btn') as HTMLButtonElement;
@@ -28,11 +30,15 @@ const SOURCE_STORAGE = 'libretranslate:source';
 const TARGET_STORAGE = 'libretranslate:target';
 const LIVE_STORAGE = 'libretranslate:live';
 const THEME_STORAGE = 'libretranslate:theme';
+const ALT_STORAGE = 'libretranslate:alternatives';
 const DEFAULT_TARGET = 'en';
 
 let languages: Language[] = [];
 let charLimit = 2000;
 let lastRequestId = 0;
+let altOptions: string[] = [];
+let selectedAlt = 0;
+let alternativesCount = 3;
 
 function langName(code: string): string {
   if (code === AUTO_CODE) return 'Auto detect';
@@ -54,6 +60,45 @@ function setStatus(state: 'idle' | 'busy' | 'done' | 'error', text: string): voi
 
 function setError(text: string): void {
   errorMsg.textContent = text;
+}
+
+function renderAlternatives(): void {
+  if (altOptions.length === 0) {
+    alternativesEl.hidden = true;
+    alternativesEl.innerHTML = '';
+    return;
+  }
+  alternativesEl.hidden = false;
+  alternativesEl.innerHTML = '';
+  const title = document.createElement('div');
+  title.className = 'alt-title';
+  title.textContent = 'Alternatives';
+  alternativesEl.appendChild(title);
+  altOptions.forEach((alt, i) => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = `alt-option${i === selectedAlt ? ' selected' : ''}`;
+    btn.textContent = alt;
+    btn.addEventListener('click', () => {
+      targetText.value = alt;
+      selectedAlt = i;
+      alternativesEl.querySelectorAll('.alt-option').forEach((el, j) => {
+        el.classList.toggle('selected', j === i);
+      });
+    });
+    alternativesEl.appendChild(btn);
+  });
+}
+
+function applyResult(result: TranslateResult): void {
+  targetText.value = result.translatedText;
+  altOptions = result.alternatives ?? [];
+  selectedAlt = 0;
+  if (result.detectedLanguage) {
+    detectedBadge.textContent = langName(result.detectedLanguage.language);
+  }
+  renderAlternatives();
+  setStatus('done', 'Done');
 }
 
 function updateCharCounter(): void {
@@ -127,9 +172,12 @@ async function doTranslate(): Promise<void> {
   const target = targetSelect.value;
   if (!text) {
     targetText.value = '';
+    altOptions = [];
+    selectedAlt = 0;
     detectedBadge.textContent = '';
     setStatus('idle', 'Idle');
     setError('');
+    renderAlternatives();
     return;
   }
   if (text.length > charLimit) return;
@@ -146,15 +194,25 @@ async function doTranslate(): Promise<void> {
       q: text,
       source,
       target,
+      alternatives: alternativesCount,
     });
     if (reqId !== lastRequestId) return;
-    targetText.value = result.translatedText;
-    if (result.detectedLanguage) {
-      detectedBadge.textContent = langName(result.detectedLanguage.language);
-    }
-    setStatus('done', 'Done');
+    applyResult(result);
   } catch (err) {
     if (reqId !== lastRequestId) return;
+    if (alternativesCount > 0 && err instanceof Error && /alternatives/i.test(err.message)) {
+      try {
+        const result = await translate(getApiUrl(), getApiKey(), { q: text, source, target });
+        if (reqId !== lastRequestId) return;
+        applyResult(result);
+        return;
+      } catch {
+        if (reqId !== lastRequestId) return;
+      }
+    }
+    altOptions = [];
+    selectedAlt = 0;
+    renderAlternatives();
     setStatus('error', 'Error');
     setError(err instanceof Error ? err.message : String(err));
   }
@@ -167,6 +225,9 @@ function swapLanguages(): void {
   targetSelect.value = src === AUTO_CODE ? DEFAULT_TARGET : src;
   sourceText.value = targetText.value;
   targetText.value = '';
+  altOptions = [];
+  selectedAlt = 0;
+  renderAlternatives();
   detectedBadge.textContent = '';
   saveSelection();
   updateCharCounter();
@@ -230,8 +291,15 @@ function init(): void {
   apiKeyInput.value = getApiKey();
   apiUrlInput.value = getApiUrl();
   liveToggle.checked = localStorage.getItem(LIVE_STORAGE) !== 'off';
+  const savedAlt = Number(localStorage.getItem(ALT_STORAGE));
+  alternativesCount =
+    localStorage.getItem(ALT_STORAGE) !== null && Number.isInteger(savedAlt) && savedAlt >= 0 && savedAlt <= 5
+      ? savedAlt
+      : 3;
+  alternativesCountEl.value = String(alternativesCount);
   renderFooter();
   updateCharCounter();
+  renderAlternatives();
 
   translateBtn.addEventListener('click', () => doTranslate());
   swapBtn.addEventListener('click', swapLanguages);
@@ -240,6 +308,9 @@ function init(): void {
   clearBtn.addEventListener('click', () => {
     sourceText.value = '';
     targetText.value = '';
+    altOptions = [];
+    selectedAlt = 0;
+    renderAlternatives();
     detectedBadge.textContent = '';
     setStatus('idle', 'Idle');
     setError('');
@@ -249,6 +320,10 @@ function init(): void {
   themeBtn.addEventListener('click', toggleTheme);
   saveSettingsBtn.addEventListener('click', saveSettings);
   resetSettingsBtn.addEventListener('click', resetSettings);
+  alternativesCountEl.addEventListener('change', () => {
+    alternativesCount = Number(alternativesCountEl.value);
+    localStorage.setItem(ALT_STORAGE, alternativesCountEl.value);
+  });
 
   sourceText.addEventListener('input', updateCharCounter);
   sourceSelect.addEventListener('change', () => {

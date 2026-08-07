@@ -12,6 +12,7 @@ export interface Settings {
 
 export interface TranslateResult {
   translatedText: string;
+  alternatives?: string[];
   detectedLanguage?: {
     language: string;
     confidence: number;
@@ -86,6 +87,7 @@ export interface TranslateParams {
   source: string;
   target: string;
   format?: 'text' | 'html';
+  alternatives?: number;
 }
 
 export function translate(instance: string, apiKey: string, params: TranslateParams): Promise<TranslateResult> {
@@ -95,6 +97,9 @@ export function translate(instance: string, apiKey: string, params: TranslatePar
     target: params.target,
     format: params.format ?? 'text',
   };
+  if (params.alternatives) {
+    body.alternatives = params.alternatives;
+  }
   if (apiKey) {
     body.api_key = apiKey;
   }

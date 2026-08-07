@@ -32,6 +32,7 @@ The app talks to any LibreTranslate instance and is CORS-ready. The default is `
 |---|---|---|
 | 🌐 | **50+ languages** | Same language list LibreTranslate serves via `/languages` |
 | 🔍 | **Auto-detect** | Sends `source=auto`, shows the detected language next to the source box |
+| 🧩 | **Translation variants** | Requests up to 5 alternative translations, clickable under the result |
 | ⚡ | **Live mode** | Optional debounced translate-as-you-type toggle |
 | 🔀 | **Swap languages** | Swaps codes and text in one click |
 | 🔁 | **Keyboard shortcut** | `Ctrl+Enter` (or `Cmd+Enter`) to translate |
@@ -65,10 +66,11 @@ Browser (GitHub Pages)
    fetch /frontend/settings  → charLimit, keyRequired
         │
         ▼
-   POST /translate {q, source, target, api_key?}
+   POST /translate {q, source, target, alternatives?, api_key?}
         │
         ▼
    translatedText → target pane
+   alternatives[] → clickable variant list under the result
    detectedLanguage → "Detected: Ukrainian" badge
 ```
 
