@@ -59,8 +59,9 @@ function setError(text: string): void {
 function updateCharCounter(): void {
   const len = sourceText.value.length;
   charCount.textContent = String(len);
-  charLimitEl.textContent = `/${charLimit}`;
-  charLimitEl.classList.toggle('limit-near', len > charLimit * 0.8 && len <= charLimit);
+  const limited = Number.isFinite(charLimit);
+  charLimitEl.textContent = limited ? `/${charLimit}` : '/∞';
+  charLimitEl.classList.toggle('limit-near', limited && len > charLimit * 0.8 && len <= charLimit);
   charLimitEl.classList.toggle('limit-over', len > charLimit);
   translateBtn.disabled = len === 0 || len > charLimit;
 }
@@ -112,7 +113,7 @@ async function loadLanguages(): Promise<void> {
 async function loadSettings(): Promise<void> {
   const settings = await fetchSettings(getApiUrl());
   if (settings) {
-    charLimit = settings.charLimit || 2000;
+    charLimit = settings.charLimit > 0 ? settings.charLimit : Infinity;
     if (settings.keyRequired && !getApiKey()) {
       setError('This instance requires an API key. Add one in Settings.');
     }

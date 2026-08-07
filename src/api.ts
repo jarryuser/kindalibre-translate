@@ -19,7 +19,8 @@ export interface TranslateResult {
 }
 
 export const AUTO_CODE = 'auto';
-export const DEFAULT_INSTANCE = 'https://libretranslate.com';
+export const DEFAULT_INSTANCE = 'https://translate.libregalaxy.org';
+const LEGACY_DEFAULT = 'https://libretranslate.com';
 
 const KEY_STORAGE = 'libretranslate:key';
 const URL_STORAGE = 'libretranslate:url';
@@ -41,7 +42,9 @@ export function saveApiKey(key: string): void {
 }
 
 export function getApiUrl(): string {
-  return localStorage.getItem(URL_STORAGE) ?? DEFAULT_INSTANCE;
+  const stored = localStorage.getItem(URL_STORAGE);
+  if (stored && stored !== LEGACY_DEFAULT) return stored;
+  return DEFAULT_INSTANCE;
 }
 
 export function saveApiUrl(url: string): void {

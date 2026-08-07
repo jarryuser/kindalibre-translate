@@ -20,7 +20,7 @@ Libre Translate is a front-end translator that calls the **LibreTranslate API** 
 
 Type or paste text, pick a target language, hit **Translate**. Supports auto-detection, live translation, language swapping, copy, text-to-speech and 50+ languages from the same list LibreTranslate itself uses
 
-The app talks to any LibreTranslate instance and is CORS-ready: `libretranslate.com` works out of the box. The official instance now requires a free API key, but the key stays in your browser's `localStorage` and can be swapped for any community or self-hosted instance
+The app talks to any LibreTranslate instance and is CORS-ready. The default is `translate.libregalaxy.org`, a free community mirror that needs no API key. The official `libretranslate.com` is paid, but you can point the app at any self-hosted or community instance in **Settings**
 
 **Try it:** [libretranslate.jarryuser.github.io](https://jarryuser.github.io/libretranslate/)
 
@@ -74,7 +74,7 @@ Browser (GitHub Pages)
 
 All API calls go straight from the page to the LibreTranslate instance. CORS is handled server-side with `Access-Control-Allow-Origin: *`, so no proxy is needed
 
-The app defaults to `https://libretranslate.com`. Since mid-2025 the official instance requires a free API key - get one at `portal.libretranslate.com` and paste it into **Settings**. The key is never committed anywhere: it lives in your browser's `localStorage` and is attached as `api_key` on each request
+The app defaults to `https://translate.libregalaxy.org`, a free community mirror with no key required and no character limit. If you use an instance that does require a key (like the official `libretranslate.com`), paste it into **Settings** - it lives only in your browser's `localStorage` and is attached as `api_key` on each request
 
 ---
 
@@ -119,9 +119,9 @@ libretranslate/
 
 ## Known limitations
 
-- **Official instance needs a free key** - libretranslate.com now returns `keyRequired: true`. Add a key in Settings, or switch the instance URL to a community mirror / self-hosted server
-- **Free keys are rate-limited** - the official portal enforces a daily character quota. Live mode is off by default to help you stay under it
-- **Requests are capped at the instance `charLimit`** (2000 on libretranslate.com). Larger texts are blocked client-side
+- **Community mirrors can go down** - the default `translate.libregalaxy.org` is free and keyless, but not SLA-backed. If it stops responding, switch to another mirror or a self-hosted instance in Settings
+- **Official instance is paid** - `libretranslate.com` returns `keyRequired: true`; it needs a key from `portal.libretranslate.com`. Self-hosted LibreTranslate is free and unlimited
+- **Instance-dependent limits** - if an instance sets a positive `charLimit`, oversized requests are blocked client-side. The default mirror reports no limit
 - **Speech is browser-dependent** - `speechSynthesis` voices and language support vary by OS and browser
 
 ---
