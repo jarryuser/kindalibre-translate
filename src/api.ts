@@ -15,7 +15,7 @@ export interface TranslateResult {
   alternatives?: string[];
   detectedLanguage?: {
     language: string;
-    confidence: number;
+    confidence?: number;
   };
 }
 
@@ -25,6 +25,11 @@ const LEGACY_DEFAULT = 'https://libretranslate.com';
 
 const KEY_STORAGE = 'kindalibre:key';
 const URL_STORAGE = 'kindalibre:url';
+const ENGINE_STORAGE = 'kindalibre:engine';
+const LLM_PROVIDER_STORAGE = 'kindalibre:llm:provider';
+const LLM_KEY_STORAGE = 'kindalibre:llm:key';
+const LLM_BASE_STORAGE = 'kindalibre:llm:base';
+const LLM_MODEL_STORAGE = 'kindalibre:llm:model';
 
 function trimSlash(url: string): string {
   return url.replace(/\/+$/, '');
@@ -54,6 +59,59 @@ export function saveApiUrl(url: string): void {
     localStorage.setItem(URL_STORAGE, clean);
   } else {
     localStorage.removeItem(URL_STORAGE);
+  }
+}
+
+export type Engine = 'libretranslate' | 'llm';
+
+export interface LlmConfig {
+  provider: string;
+  apiKey: string;
+  baseUrl: string;
+  model: string;
+}
+
+export function getEngine(): Engine {
+  return localStorage.getItem(ENGINE_STORAGE) === 'llm' ? 'llm' : 'libretranslate';
+}
+
+export function saveEngine(engine: Engine): void {
+  if (engine === 'llm') {
+    localStorage.setItem(ENGINE_STORAGE, 'llm');
+  } else {
+    localStorage.removeItem(ENGINE_STORAGE);
+  }
+}
+
+export function getLlmConfig(): LlmConfig {
+  return {
+    provider: localStorage.getItem(LLM_PROVIDER_STORAGE) ?? 'openai',
+    apiKey: localStorage.getItem(LLM_KEY_STORAGE) ?? '',
+    baseUrl: localStorage.getItem(LLM_BASE_STORAGE) ?? '',
+    model: localStorage.getItem(LLM_MODEL_STORAGE) ?? '',
+  };
+}
+
+export function saveLlmConfig(cfg: LlmConfig): void {
+  if (cfg.provider) {
+    localStorage.setItem(LLM_PROVIDER_STORAGE, cfg.provider);
+  } else {
+    localStorage.removeItem(LLM_PROVIDER_STORAGE);
+  }
+  if (cfg.apiKey.trim()) {
+    localStorage.setItem(LLM_KEY_STORAGE, cfg.apiKey.trim());
+  } else {
+    localStorage.removeItem(LLM_KEY_STORAGE);
+  }
+  if (cfg.baseUrl.trim()) {
+    localStorage.setItem(LLM_BASE_STORAGE, cfg.baseUrl.trim());
+  } else {
+    localStorage.removeItem(LLM_BASE_STORAGE);
+  }
+  if (cfg.model.trim()) {
+    localStorage.setItem(LLM_MODEL_STORAGE, cfg.model.trim());
+  } else {
+    localStorage.removeItem(LLM_MODEL_STORAGE);
   }
 }
 

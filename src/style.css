@@ -392,6 +392,17 @@ select:focus-visible, textarea:focus-visible, input:focus-visible {
   grid-template-columns: 1fr 1fr;
 }
 
+.settings-group {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: 1fr 1fr;
+  grid-column: 1 / -1;
+}
+
+.settings-group[hidden] { display: none; }
+
+.field-full { grid-column: 1 / -1; }
+
 .field { display: flex; flex-direction: column; gap: 6px; }
 
 .field label { font-size: 13px; color: var(--text-muted); }
@@ -440,5 +451,6 @@ select:focus-visible, textarea:focus-visible, input:focus-visible {
   .panes { grid-template-columns: 1fr; }
   .pane + .pane { border-left: none; border-top: 1px solid var(--border-soft); }
   .settings-body { grid-template-columns: 1fr; }
+  .settings-group { grid-template-columns: 1fr; }
   .brand-sub { display: none; }
 }

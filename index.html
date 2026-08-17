@@ -127,16 +127,52 @@
         Settings
       </summary>
       <div class="settings-body">
-        <div class="field">
-          <label for="api-key">API key</label>
-          <input id="api-key" type="password" placeholder="Optional - required by libretranslate.com" autocomplete="off" spellcheck="false" />
-          <p class="field-hint">The default instance works without a key. Fill this in only if your instance requires one, e.g. the official libretranslate.com. The key is stored only in your browser (localStorage).</p>
+        <div class="field field-full">
+          <label for="engine">Translation engine</label>
+          <div class="select-wrap">
+            <select id="engine">
+              <option value="libretranslate">LibreTranslate - free, no key</option>
+              <option value="llm">LLM - best quality, needs your own API key</option>
+            </select>
+          </div>
+          <p class="field-hint">LibreTranslate works out of the box but its quality is limited. LLM mode uses a large language model with your own API key for much better results. The key never leaves your browser.</p>
         </div>
-        <div class="field">
-          <label for="api-url">API instance URL</label>
-          <input id="api-url" type="text" placeholder="https://libretranslate.com" autocomplete="off" spellcheck="false" />
-          <p class="field-hint">Point to any LibreTranslate instance, e.g. <code>translate.libregalaxy.org</code>, a community mirror, or a self-hosted one.</p>
+
+        <div id="lt-settings" class="settings-group">
+          <div class="field">
+            <label for="api-key">API key</label>
+            <input id="api-key" type="password" placeholder="Optional - required by libretranslate.com" autocomplete="off" spellcheck="false" />
+            <p class="field-hint">The default instance works without a key. Fill this in only if your instance requires one, e.g. the official libretranslate.com. The key is stored only in your browser (localStorage).</p>
+          </div>
+          <div class="field">
+            <label for="api-url">API instance URL</label>
+            <input id="api-url" type="text" placeholder="https://libretranslate.com" autocomplete="off" spellcheck="false" />
+            <p class="field-hint">Point to any LibreTranslate instance, e.g. <code>translate.libregalaxy.org</code>, a community mirror, or a self-hosted one.</p>
+          </div>
         </div>
+
+        <div id="llm-settings" class="settings-group" hidden>
+          <div class="field field-full">
+            <label for="llm-provider">Provider</label>
+            <div class="select-wrap">
+              <select id="llm-provider"></select>
+            </div>
+          </div>
+          <div class="field field-full">
+            <label for="llm-key">LLM API key</label>
+            <input id="llm-key" type="password" placeholder="sk-..." autocomplete="off" spellcheck="false" />
+          </div>
+          <div class="field">
+            <label for="llm-base">Base URL</label>
+            <input id="llm-base" type="text" autocomplete="off" spellcheck="false" />
+          </div>
+          <div class="field">
+            <label for="llm-model">Model</label>
+            <input id="llm-model" type="text" autocomplete="off" spellcheck="false" />
+          </div>
+          <p class="field-hint field-full">The key is sent only to the provider you picked and stored only in your browser (localStorage). For OpenAI-compatible endpoints (OpenAI, Groq, OpenRouter, local servers) the app calls <code>/chat/completions</code>; for Anthropic it uses <code>/v1/messages</code>.</p>
+        </div>
+
         <div class="field-actions">
           <button id="save-settings-btn" class="btn btn-secondary">Save</button>
           <button id="reset-settings-btn" class="btn btn-ghost">Reset to defaults</button>

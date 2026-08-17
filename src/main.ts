@@ -1,4 +1,6 @@
-import { AUTO_CODE, DEFAULT_INSTANCE, fetchLanguages, fetchSettings, getApiKey, getApiUrl, saveApiKey, saveApiUrl, translate, type Language, type TranslateResult } from './api.js';
+import { AUTO_CODE, DEFAULT_INSTANCE, fetchLanguages, fetchSettings, getApiKey, getApiUrl, getEngine, getLlmConfig, saveApiKey, saveApiUrl, saveEngine, saveLlmConfig, translate, type Engine, type Language, type TranslateResult } from './api.js';
+import { LLM_PROVIDERS, translateWithLLM } from './llm.js';
+import { STATIC_LANGUAGES } from './languages.js';
 
 const sourceSelect = document.getElementById('source-lang') as HTMLSelectElement;
 const targetSelect = document.getElementById('target-lang') as HTMLSelectElement;
@@ -25,6 +27,13 @@ const apiUrlInput = document.getElementById('api-url') as HTMLInputElement;
 const saveSettingsBtn = document.getElementById('save-settings-btn') as HTMLButtonElement;
 const resetSettingsBtn = document.getElementById('reset-settings-btn') as HTMLButtonElement;
 const settingsStatus = document.getElementById('settings-status') as HTMLElement;
+const engineSelect = document.getElementById('engine') as HTMLSelectElement;
+const ltSettingsEl = document.getElementById('lt-settings') as HTMLElement;
+const llmSettingsEl = document.getElementById('llm-settings') as HTMLElement;
+const llmProviderSelect = document.getElementById('llm-provider') as HTMLSelectElement;
+const llmKeyInput = document.getElementById('llm-key') as HTMLInputElement;
+const llmBaseInput = document.getElementById('llm-base') as HTMLInputElement;
+const llmModelInput = document.getElementById('llm-model') as HTMLInputElement;
 
 const SOURCE_STORAGE = 'kindalibre:source';
 const TARGET_STORAGE = 'kindalibre:target';
@@ -39,6 +48,7 @@ let lastRequestId = 0;
 let altOptions: string[] = [];
 let selectedAlt = 0;
 let alternativesCount = 3;
+let engine: Engine = getEngine();
 
 function langName(code: string): string {
   if (code === AUTO_CODE) return 'Auto detect';
@@ -117,13 +127,14 @@ function saveSelection(): void {
 }
 
 function populateSelects(): void {
+  const list = engine === 'llm' ? STATIC_LANGUAGES : languages;
   sourceSelect.innerHTML = '';
   targetSelect.innerHTML = '';
   const auto = document.createElement('option');
   auto.value = AUTO_CODE;
   auto.textContent = 'Auto detect';
   sourceSelect.appendChild(auto);
-  for (const lang of languages) {
+  for (const lang of list) {
     const opt = document.createElement('option');
     opt.value = lang.code;
     opt.textContent = lang.name;
@@ -132,17 +143,30 @@ function populateSelects(): void {
   }
   const source = localStorage.getItem(SOURCE_STORAGE) ?? AUTO_CODE;
   const target = localStorage.getItem(TARGET_STORAGE) ?? DEFAULT_TARGET;
-  if (languages.some((l) => l.code === source)) sourceSelect.value = source;
-  if (languages.some((l) => l.code === target)) targetSelect.value = target;
+  if (list.some((l) => l.code === source)) sourceSelect.value = source;
+  if (list.some((l) => l.code === target)) targetSelect.value = target;
 }
 
 function renderFooter(): void {
+  if (engine === 'llm') {
+    const cfg = getLlmConfig();
+    const provider = LLM_PROVIDERS[cfg.provider] ?? LLM_PROVIDERS.custom;
+    instanceInfo.textContent = provider.name;
+    keyInfo.textContent = cfg.apiKey ? `LLM key set (${cfg.model || provider.defaultModel})` : 'No LLM key';
+    return;
+  }
   const url = getApiUrl();
   instanceInfo.textContent = hostOf(url);
   keyInfo.textContent = getApiKey() ? 'API key set' : 'No API key';
 }
 
 async function loadLanguages(): Promise<void> {
+  if (engine === 'llm') {
+    languages = [];
+    populateSelects();
+    setError('');
+    return;
+  }
   const url = getApiUrl();
   try {
     languages = await fetchLanguages(url);
@@ -156,6 +180,11 @@ async function loadLanguages(): Promise<void> {
 }
 
 async function loadSettings(): Promise<void> {
+  if (engine === 'llm') {
+    charLimit = Infinity;
+    updateCharCounter();
+    return;
+  }
   const settings = await fetchSettings(getApiUrl());
   if (settings) {
     charLimit = settings.charLimit > 0 ? settings.charLimit : Infinity;
@@ -164,6 +193,23 @@ async function loadSettings(): Promise<void> {
     }
   }
   updateCharCounter();
+}
+
+function selectedOptionText(select: HTMLSelectElement): string {
+  return select.options[select.selectedIndex]?.text ?? select.value;
+}
+
+function runTranslate(text: string, source: string, target: string, alternatives: number): Promise<TranslateResult> {
+  if (engine === 'llm') {
+    return translateWithLLM(getLlmConfig(), {
+      q: text,
+      source,
+      sourceName: source === AUTO_CODE ? 'auto-detect' : selectedOptionText(sourceSelect),
+      targetName: selectedOptionText(targetSelect),
+      alternatives,
+    });
+  }
+  return translate(getApiUrl(), getApiKey(), { q: text, source, target, alternatives });
 }
 
 async function doTranslate(): Promise<void> {
@@ -190,19 +236,14 @@ async function doTranslate(): Promise<void> {
   setStatus('busy', 'Translating…');
   setError('');
   try {
-    const result = await translate(getApiUrl(), getApiKey(), {
-      q: text,
-      source,
-      target,
-      alternatives: alternativesCount,
-    });
+    const result = await runTranslate(text, source, target, alternativesCount);
     if (reqId !== lastRequestId) return;
     applyResult(result);
   } catch (err) {
     if (reqId !== lastRequestId) return;
     if (alternativesCount > 0 && err instanceof Error && /alternatives/i.test(err.message)) {
       try {
-        const result = await translate(getApiUrl(), getApiKey(), { q: text, source, target });
+        const result = await runTranslate(text, source, target, 0);
         if (reqId !== lastRequestId) return;
         applyResult(result);
         return;
@@ -267,11 +308,44 @@ function applyTheme(): void {
   themeBtn.textContent = theme === 'dark' ? '☀' : '☾';
 }
 
+function applyEngineVisibility(): void {
+  const llm = engine === 'llm';
+  ltSettingsEl.hidden = llm;
+  llmSettingsEl.hidden = !llm;
+}
+
+function fillLlmProviders(): void {
+  llmProviderSelect.innerHTML = '';
+  for (const [key, provider] of Object.entries(LLM_PROVIDERS)) {
+    const opt = document.createElement('option');
+    opt.value = key;
+    opt.textContent = provider.name;
+    llmProviderSelect.appendChild(opt);
+  }
+}
+
+function applyLlmPreset(): void {
+  const provider = LLM_PROVIDERS[llmProviderSelect.value];
+  if (provider) {
+    llmBaseInput.value = provider.baseUrl;
+    llmModelInput.value = provider.defaultModel;
+  }
+}
+
 async function saveSettings(): Promise<void> {
+  engine = engineSelect.value === 'llm' ? 'llm' : 'libretranslate';
+  saveEngine(engine);
   saveApiKey(apiKeyInput.value);
   saveApiUrl(apiUrlInput.value);
+  saveLlmConfig({
+    provider: llmProviderSelect.value,
+    apiKey: llmKeyInput.value,
+    baseUrl: llmBaseInput.value,
+    model: llmModelInput.value,
+  });
   settingsStatus.textContent = 'Saving…';
   settingsStatus.className = 'settings-status';
+  applyEngineVisibility();
   renderFooter();
   await Promise.all([loadLanguages(), loadSettings()]);
   settingsStatus.textContent = 'Saved';
@@ -279,15 +353,35 @@ async function saveSettings(): Promise<void> {
 }
 
 function resetSettings(): void {
+  engine = 'libretranslate';
+  engineSelect.value = 'libretranslate';
   apiKeyInput.value = '';
   apiUrlInput.value = DEFAULT_INSTANCE;
+  llmProviderSelect.value = 'openai';
+  llmKeyInput.value = '';
+  applyLlmPreset();
+  saveEngine(engine);
   localStorage.removeItem('kindalibre:key');
   localStorage.removeItem('kindalibre:url');
+  localStorage.removeItem('kindalibre:engine');
+  localStorage.removeItem('kindalibre:llm:provider');
+  localStorage.removeItem('kindalibre:llm:key');
+  localStorage.removeItem('kindalibre:llm:base');
+  localStorage.removeItem('kindalibre:llm:model');
   saveSettings();
 }
 
 function init(): void {
   applyTheme();
+  engineSelect.value = engine;
+  fillLlmProviders();
+  const cfg = getLlmConfig();
+  llmProviderSelect.value = cfg.provider;
+  llmKeyInput.value = cfg.apiKey;
+  const presets = LLM_PROVIDERS[cfg.provider] ?? LLM_PROVIDERS.custom;
+  llmBaseInput.value = cfg.baseUrl || presets.baseUrl;
+  llmModelInput.value = cfg.model || presets.defaultModel;
+  applyEngineVisibility();
   apiKeyInput.value = getApiKey();
   apiUrlInput.value = getApiUrl();
   liveToggle.checked = localStorage.getItem(LIVE_STORAGE) !== 'off';
@@ -318,6 +412,14 @@ function init(): void {
     sourceText.focus();
   });
   themeBtn.addEventListener('click', toggleTheme);
+  engineSelect.addEventListener('change', () => {
+    engine = engineSelect.value === 'llm' ? 'llm' : 'libretranslate';
+    saveEngine(engine);
+    applyEngineVisibility();
+    renderFooter();
+    loadLanguages().then(loadSettings);
+  });
+  llmProviderSelect.addEventListener('change', applyLlmPreset);
   saveSettingsBtn.addEventListener('click', saveSettings);
   resetSettingsBtn.addEventListener('click', resetSettings);
   alternativesCountEl.addEventListener('change', () => {
@@ -328,8 +430,8 @@ function init(): void {
   sourceText.addEventListener('input', updateCharCounter);
   sourceSelect.addEventListener('change', () => {
     if (targetSelect.value === sourceSelect.value && sourceSelect.value !== AUTO_CODE) {
-      const fallback = languages.find((l) => l.code !== sourceSelect.value);
-      targetSelect.value = fallback ? fallback.code : DEFAULT_TARGET;
+      const fallback = Array.from(targetSelect.options).find((o) => o.value !== sourceSelect.value && o.value !== AUTO_CODE);
+      targetSelect.value = fallback ? fallback.value : DEFAULT_TARGET;
     }
     detectedBadge.textContent = '';
     saveSelection();

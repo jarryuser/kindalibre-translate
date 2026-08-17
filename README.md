@@ -41,6 +41,7 @@ The app talks to any LibreTranslate instance and is CORS-ready. The default is `
 | 🔢 | **Char limit guard** | Reads the instance `charLimit`, blocks oversized requests |
 | 🔑 | **Optional API key** | Stored only in `localStorage`, never sent anywhere else |
 | 🖼️ | **Any instance** | Point the app at a self-hosted or community LibreTranslate mirror |
+| 🤖 | **LLM mode** | Optional second engine: translate with an LLM (OpenAI, Anthropic, Groq, OpenRouter, or any OpenAI-compatible endpoint) using your own API key for dramatically better quality |
 | 🌗 | **Dark / light theme** | GitHub-style theme toggle, persisted across visits |
 
 ---
@@ -78,6 +79,10 @@ All API calls go straight from the page to the LibreTranslate instance. CORS is 
 
 The app defaults to `https://translate.libregalaxy.org`, a free community mirror with no key required and no character limit. If you use an instance that does require a key (like the official `libretranslate.com`), paste it into **Settings** - it lives only in your browser's `localStorage` and is attached as `api_key` on each request
 
+### LLM mode
+
+Argos-based LibreTranslate models are mediocre, so **Settings → Engine → LLM** swaps the backend for a large language model of your choice. Pick a provider (OpenAI, Anthropic, Groq, OpenRouter or any OpenAI-compatible endpoint incl. local servers), paste your API key, pick a model. The app sends a single `/chat/completions` or `/v1/messages` request that returns the translation (plus alternatives and auto-detected language) as JSON. Keys and settings stay in `localStorage` and are only ever sent to the provider you selected. You pay nothing extra - calls are billed to your own key
+
 ---
 
 ## Getting started
@@ -110,7 +115,9 @@ If you fork the repo, the `base` path in `vite.config.ts` must match your GitHub
 kindalibre-translate/
 ├── index.html                 - single HTML shell
 ├── src/
-│   ├── api.ts                 - LibreTranslate client (languages, settings, translate)
+│   ├── api.ts                 - LibreTranslate client (languages, settings, translate) + engine/key storage
+│   ├── llm.ts                 - LLM client (OpenAI-compatible + Anthropic) + provider presets
+│   ├── languages.ts           - static language list used in LLM mode
 │   ├── main.ts                - UI state, translation flow, shortcuts
 │   └── style.css              - GitHub-style dark/light theme
 ├── vite.config.ts             - sets the GitHub Pages base path
@@ -123,7 +130,8 @@ kindalibre-translate/
 
 - **Community mirrors can go down** - the default `translate.libregalaxy.org` is free and keyless, but not SLA-backed. If it stops responding, switch to another mirror or a self-hosted instance in Settings
 - **Official instance is paid** - `libretranslate.com` returns `keyRequired: true`; it needs a key from `portal.libretranslate.com`. Self-hosted LibreTranslate is free and unlimited
-- **Instance-dependent limits** - if an instance sets a positive `charLimit`, oversized requests are blocked client-side. The default mirror reports no limit
+- **LLM mode uses your key and its limits** - quality and pricing depend on the provider/model you pick. The key never leaves your browser, but it is sent directly to the chosen provider
+- **Instance-dependent limits** - if an instance sets a positive `charLimit`, oversized requests are blocked client-side. The default mirror reports no limit. In LLM mode there is no char limit (token limits depend on the model)
 - **Speech is browser-dependent** - `speechSynthesis` voices and language support vary by OS and browser
 
 ---
