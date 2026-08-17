@@ -103,9 +103,9 @@ npm run dev    # → http://localhost:5173
 npm run deploy
 ```
 
-Builds the app and pushes `dist/` to the `gh-pages` branch with `gh-pages`. The live site updates at `https://jarryuser.github.io/kindalibre-translate/` in ~30 seconds
+Builds the app, publishes `dist/` (with a `.nojekyll` marker so GitHub Pages serves it raw) to the `gh-pages` branch, then waits until the live site actually serves the new build (up to 5 minutes). The deploy fails loudly if the Pages build does not go live, so you are never left with a silently stale site. `SITE_URL` can be overridden for forks.
 
-If you fork the repo, the `base` path in `vite.config.ts` must match your GitHub Pages subpath
+If you fork the repo, the `base` path in `vite.config.ts` must match your GitHub Pages subpath, and set `SITE_URL` accordingly
 
 ---
 
@@ -114,6 +114,10 @@ If you fork the repo, the `base` path in `vite.config.ts` must match your GitHub
 ```
 kindalibre-translate/
 ├── index.html                 - single HTML shell
+├── public/
+│   └── .nojekyll              - tells GitHub Pages to serve files as-is (no Jekyll)
+├── scripts/
+│   └── deploy.mjs             - publish + verify the live site updated
 ├── src/
 │   ├── api.ts                 - LibreTranslate client (languages, settings, translate) + engine/key storage
 │   ├── llm.ts                 - LLM client (OpenAI-compatible + Anthropic) + provider presets
