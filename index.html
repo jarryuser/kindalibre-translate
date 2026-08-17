@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Kindalibre Translate</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%232f81f7'><path d='M12.87 15.07l-2.54-2.51.03-.03A17.52 17.52 0 0 0 14.07 6H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12zm-2.62 7l1.62-4.33L19.12 17h-3.24z'/></svg>" />
-  <script type="module" crossorigin src="/kindalibre-translate/assets/index-CAf_Hg4g.js"></script>
-  <link rel="stylesheet" crossorigin href="/kindalibre-translate/assets/index-C4XtgO3_.css">
+  <script type="module" crossorigin src="/kindalibre-translate/assets/index-DieroYcU.js"></script>
+  <link rel="stylesheet" crossorigin href="/kindalibre-translate/assets/index-CKH8NQ4J.css">
 </head>
 <body>
   <div class="app">
@@ -128,16 +128,52 @@
         Settings
       </summary>
       <div class="settings-body">
-        <div class="field">
-          <label for="api-key">API key</label>
-          <input id="api-key" type="password" placeholder="Optional - required by libretranslate.com" autocomplete="off" spellcheck="false" />
-          <p class="field-hint">The default instance works without a key. Fill this in only if your instance requires one, e.g. the official libretranslate.com. The key is stored only in your browser (localStorage).</p>
+        <div class="field field-full">
+          <label for="engine">Translation engine</label>
+          <div class="select-wrap">
+            <select id="engine">
+              <option value="libretranslate">LibreTranslate - free, no key</option>
+              <option value="llm">LLM - best quality, needs your own API key</option>
+            </select>
+          </div>
+          <p class="field-hint">LibreTranslate works out of the box but its quality is limited. LLM mode uses a large language model with your own API key for much better results. The key never leaves your browser.</p>
         </div>
-        <div class="field">
-          <label for="api-url">API instance URL</label>
-          <input id="api-url" type="text" placeholder="https://libretranslate.com" autocomplete="off" spellcheck="false" />
-          <p class="field-hint">Point to any LibreTranslate instance, e.g. <code>translate.libregalaxy.org</code>, a community mirror, or a self-hosted one.</p>
+
+        <div id="lt-settings" class="settings-group">
+          <div class="field">
+            <label for="api-key">API key</label>
+            <input id="api-key" type="password" placeholder="Optional - required by libretranslate.com" autocomplete="off" spellcheck="false" />
+            <p class="field-hint">The default instance works without a key. Fill this in only if your instance requires one, e.g. the official libretranslate.com. The key is stored only in your browser (localStorage).</p>
+          </div>
+          <div class="field">
+            <label for="api-url">API instance URL</label>
+            <input id="api-url" type="text" placeholder="https://libretranslate.com" autocomplete="off" spellcheck="false" />
+            <p class="field-hint">Point to any LibreTranslate instance, e.g. <code>translate.libregalaxy.org</code>, a community mirror, or a self-hosted one.</p>
+          </div>
         </div>
+
+        <div id="llm-settings" class="settings-group" hidden>
+          <div class="field field-full">
+            <label for="llm-provider">Provider</label>
+            <div class="select-wrap">
+              <select id="llm-provider"></select>
+            </div>
+          </div>
+          <div class="field field-full">
+            <label for="llm-key">LLM API key</label>
+            <input id="llm-key" type="password" placeholder="sk-..." autocomplete="off" spellcheck="false" />
+          </div>
+          <div class="field">
+            <label for="llm-base">Base URL</label>
+            <input id="llm-base" type="text" autocomplete="off" spellcheck="false" />
+          </div>
+          <div class="field">
+            <label for="llm-model">Model</label>
+            <input id="llm-model" type="text" autocomplete="off" spellcheck="false" />
+          </div>
+          <p class="field-hint field-full">The key is sent only to the provider you picked and stored only in your browser (localStorage). For OpenAI-compatible endpoints (OpenAI, Groq, OpenRouter, local servers) the app calls <code>/chat/completions</code>; for Anthropic it uses <code>/v1/messages</code>.</p>
+        </div>
+
         <div class="field-actions">
           <button id="save-settings-btn" class="btn btn-secondary">Save</button>
           <button id="reset-settings-btn" class="btn btn-ghost">Reset to defaults</button>
