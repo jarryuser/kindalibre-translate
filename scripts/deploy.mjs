@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const dist = join(root, 'dist');
-const SITE_URL = process.env.SITE_URL || 'https://jarryuser.github.io/kindalibre-translate';
+const siteUrl = (process.env.SITE_URL || 'https://jarryuser.github.io/kindalibre-translate').replace(/\/+$/, '');
 
 writeFileSync(join(dist, '.nojekyll'), '');
 console.log('Built dist/.nojekyll');
@@ -18,32 +18,38 @@ try {
 }
 
 const index = readFileSync(join(dist, 'index.html'), 'utf8');
-const match = index.match(/assets\/index-[A-Za-z0-9_-]+\.js/);
+const assetPattern = /<script\b[^>]*\ssrc="([^\"]*assets\/index-[A-Za-z0-9_-]+\.js)"/;
+const match = index.match(assetPattern);
 if (!match) {
   console.error('Could not determine the built asset name.');
   process.exit(1);
 }
-const asset = match[0];
-const url = `${SITE_URL}/${asset}`;
+const url = new URL(match[1], `${siteUrl}/`).href;
 const timeoutMs = 5 * 60 * 1000;
-const start = Date.now();
+const deadline = Date.now() + timeoutMs;
 
-console.log(`Waiting for ${url} to go live...`);
-while (Date.now() - start < timeoutMs) {
+console.log(`Waiting for ${siteUrl}/ to reference ${url}...`);
+for (let remaining = deadline - Date.now(); remaining > 0; remaining = deadline - Date.now()) {
+  const signal = AbortSignal.timeout(Math.min(10000, remaining));
   try {
-    const res = await fetch(url, { method: 'HEAD' });
-    if (res.ok) {
-      console.log(`Live site is serving ${asset}`);
-      process.exit(0);
+    const pageUrl = `${siteUrl}/?deploy=${Date.now()}`;
+    const page = await fetch(pageUrl, { signal });
+    const script = page.ok ? (await page.text()).match(assetPattern)?.[1] : undefined;
+    if (script && new URL(script, page.url || pageUrl).href === url) {
+      const res = await fetch(url, { method: 'HEAD', signal });
+      if (res.ok) {
+        console.log(`Live site is serving ${url}`);
+        process.exit(0);
+      }
     }
   } catch {
     // network hiccup, retry
   }
-  await new Promise((r) => setTimeout(r, 10000));
+  await new Promise((r) => setTimeout(r, Math.min(10000, Math.max(0, deadline - Date.now()))));
 }
 
 console.error(
-  `Site still not serving ${url} after ${timeoutMs / 1000}s. ` +
+  `Site still not serving a page with a working ${url} after ${timeoutMs / 1000}s. ` +
     'The gh-pages branch was pushed but GitHub Pages has not published the new build. ' +
     'Check the Pages build status on GitHub (Settings > Pages) or run `npm run deploy` again.',
 );

@@ -46,7 +46,6 @@ let languages: Language[] = [];
 let charLimit = 2000;
 let lastRequestId = 0;
 let altOptions: string[] = [];
-let selectedAlt = 0;
 let alternativesCount = 3;
 let engine: Engine = getEngine();
 
@@ -84,16 +83,15 @@ function renderAlternatives(): void {
   title.className = 'alt-title';
   title.textContent = 'Alternatives';
   alternativesEl.appendChild(title);
-  altOptions.forEach((alt, i) => {
+  altOptions.forEach((alt) => {
     const btn = document.createElement('button');
     btn.type = 'button';
-    btn.className = `alt-option${i === selectedAlt ? ' selected' : ''}`;
+    btn.className = 'alt-option';
     btn.textContent = alt;
     btn.addEventListener('click', () => {
       targetText.value = alt;
-      selectedAlt = i;
-      alternativesEl.querySelectorAll('.alt-option').forEach((el, j) => {
-        el.classList.toggle('selected', j === i);
+      alternativesEl.querySelectorAll('.alt-option').forEach((el) => {
+        el.classList.toggle('selected', el === btn);
       });
     });
     alternativesEl.appendChild(btn);
@@ -103,7 +101,6 @@ function renderAlternatives(): void {
 function applyResult(result: TranslateResult): void {
   targetText.value = result.translatedText;
   altOptions = result.alternatives ?? [];
-  selectedAlt = 0;
   if (result.detectedLanguage) {
     detectedBadge.textContent = langName(result.detectedLanguage.language);
   }
@@ -217,9 +214,9 @@ async function doTranslate(): Promise<void> {
   const source = sourceSelect.value;
   const target = targetSelect.value;
   if (!text) {
+    lastRequestId++;
     targetText.value = '';
     altOptions = [];
-    selectedAlt = 0;
     detectedBadge.textContent = '';
     setStatus('idle', 'Idle');
     setError('');
@@ -252,7 +249,6 @@ async function doTranslate(): Promise<void> {
       }
     }
     altOptions = [];
-    selectedAlt = 0;
     renderAlternatives();
     setStatus('error', 'Error');
     setError(err instanceof Error ? err.message : String(err));
@@ -267,7 +263,6 @@ function swapLanguages(): void {
   sourceText.value = targetText.value;
   targetText.value = '';
   altOptions = [];
-  selectedAlt = 0;
   renderAlternatives();
   detectedBadge.textContent = '';
   saveSelection();
@@ -395,19 +390,15 @@ function init(): void {
   updateCharCounter();
   renderAlternatives();
 
+  let debounceTimer: number | undefined;
   translateBtn.addEventListener('click', () => doTranslate());
   swapBtn.addEventListener('click', swapLanguages);
   copyBtn.addEventListener('click', copyResult);
   speakBtn.addEventListener('click', speakResult);
   clearBtn.addEventListener('click', () => {
+    window.clearTimeout(debounceTimer);
     sourceText.value = '';
-    targetText.value = '';
-    altOptions = [];
-    selectedAlt = 0;
-    renderAlternatives();
-    detectedBadge.textContent = '';
-    setStatus('idle', 'Idle');
-    setError('');
+    doTranslate();
     updateCharCounter();
     sourceText.focus();
   });
@@ -449,7 +440,6 @@ function init(): void {
     }
   });
 
-  let debounceTimer: number | undefined;
   liveToggle.addEventListener('change', () => {
     localStorage.setItem(LIVE_STORAGE, liveToggle.checked ? 'on' : 'off');
     if (liveToggle.checked) doTranslate();

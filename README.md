@@ -4,6 +4,8 @@
 
 **A "kinda libre" browser translator powered by the LibreTranslate API - no backend, deployable on GitHub Pages in one command**
 
+**English** · [Slovenčina](./README.sk.md) · [Deutsch](./README.de.md) · [Українська](./README.uk.md) · [Русский](./README.ru.md)
+
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-→-2f81f7?style=flat-square)](https://jarryuser.github.io/kindalibre-translate/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.3-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Vite](https://img.shields.io/badge/Vite-5-646CFF?style=flat-square&logo=vite&logoColor=white)](https://vitejs.dev/)
@@ -22,7 +24,7 @@ Type or paste text, pick a target language, hit **Translate**. Supports auto-det
 
 The app talks to any LibreTranslate instance and is CORS-ready. The default is `translate.libregalaxy.org`, a free community mirror that needs no API key. The official `libretranslate.com` is paid, but you can point the app at any self-hosted or community instance in **Settings**
 
-**Try it:** [kindalibre-translate.jarryuser.github.io](https://jarryuser.github.io/kindalibre-translate/)
+**Try it:** [jarryuser.github.io/kindalibre-translate](https://jarryuser.github.io/kindalibre-translate/)
 
 ---
 
@@ -39,7 +41,7 @@ The app talks to any LibreTranslate instance and is CORS-ready. The default is `
 | 📋 | **Copy result** | Clipboard with a short confirmation state |
 | 🔊 | **Listen** | Browser `speechSynthesis` reads the translation aloud |
 | 🔢 | **Char limit guard** | Reads the instance `charLimit`, blocks oversized requests |
-| 🔑 | **Optional API key** | Stored only in `localStorage`, never sent anywhere else |
+| 🔑 | **Optional API key** | Stored in `localStorage` and sent to the selected instance |
 | 🖼️ | **Any instance** | Point the app at a self-hosted or community LibreTranslate mirror |
 | 🤖 | **LLM mode** | Optional second engine: translate with an LLM (OpenAI, Anthropic, Groq, OpenRouter, or any OpenAI-compatible endpoint) using your own API key for dramatically better quality |
 | 🌗 | **Dark / light theme** | GitHub-style theme toggle, persisted across visits |
@@ -81,7 +83,7 @@ The app defaults to `https://translate.libregalaxy.org`, a free community mirror
 
 ### LLM mode
 
-Argos-based LibreTranslate models are mediocre, so **Settings → Engine → LLM** swaps the backend for a large language model of your choice. Pick a provider (OpenAI, Anthropic, Groq, OpenRouter or any OpenAI-compatible endpoint incl. local servers), paste your API key, pick a model. The app sends a single `/chat/completions` or `/v1/messages` request that returns the translation (plus alternatives and auto-detected language) as JSON. Keys and settings stay in `localStorage` and are only ever sent to the provider you selected. You pay nothing extra - calls are billed to your own key
+Argos-based LibreTranslate models are mediocre, so **Settings → Engine → LLM** swaps the backend for a large language model of your choice. Pick a provider (OpenAI, Anthropic, Groq, OpenRouter or any OpenAI-compatible endpoint incl. local servers), paste your API key, pick a model. The app sends a single `/chat/completions` or `/v1/messages` request that returns the translation (plus alternatives and auto-detected language) as JSON. Settings are stored in `localStorage`. The API key is sent to the configured endpoint, and calls are billed according to the provider’s terms
 
 ---
 
@@ -103,7 +105,7 @@ npm run dev    # → http://localhost:5173
 npm run deploy
 ```
 
-Builds the app, publishes `dist/` (with a `.nojekyll` marker so GitHub Pages serves it raw) to the `gh-pages` branch, then waits until the live site actually serves the new build (up to 5 minutes). The deploy fails loudly if the Pages build does not go live, so you are never left with a silently stale site. `SITE_URL` can be overridden for forks.
+Builds the app and publishes `dist/` with a `.nojekyll` marker to the `gh-pages` branch. It waits up to five minutes for the live homepage to reference the new JavaScript file and for that file to be available. The command exits with an error if either check fails
 
 If you fork the repo, the `base` path in `vite.config.ts` must match your GitHub Pages subpath, and set `SITE_URL` accordingly
 
@@ -134,7 +136,7 @@ kindalibre-translate/
 
 - **Community mirrors can go down** - the default `translate.libregalaxy.org` is free and keyless, but not SLA-backed. If it stops responding, switch to another mirror or a self-hosted instance in Settings
 - **Official instance is paid** - `libretranslate.com` returns `keyRequired: true`; it needs a key from `portal.libretranslate.com`. Self-hosted LibreTranslate is free and unlimited
-- **LLM mode uses your key and its limits** - quality and pricing depend on the provider/model you pick. The key never leaves your browser, but it is sent directly to the chosen provider
+- **LLM mode uses your key and its limits** - quality and pricing depend on the provider/model you pick. The browser sends the key directly to the configured API endpoint
 - **Instance-dependent limits** - if an instance sets a positive `charLimit`, oversized requests are blocked client-side. The default mirror reports no limit. In LLM mode there is no char limit (token limits depend on the model)
 - **Speech is browser-dependent** - `speechSynthesis` voices and language support vary by OS and browser
 

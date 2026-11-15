@@ -1,0 +1,154 @@
+<div align="center">
+
+# Kindalibre Translate
+
+**Браузерний перекладач на основі API LibreTranslate, без власного сервера та з публікацією на GitHub Pages однією командою**
+
+[English](./README.md) · [Slovenčina](./README.sk.md) · [Deutsch](./README.de.md) · **Українська** · [Русский](./README.ru.md)
+
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-→-2f81f7?style=flat-square)](https://jarryuser.github.io/kindalibre-translate/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.3-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Vite](https://img.shields.io/badge/Vite-5-646CFF?style=flat-square&logo=vite&logoColor=white)](https://vitejs.dev/)
+[![LibreTranslate](https://img.shields.io/badge/Powered%20by-LibreTranslate-2f81f7?style=flat-square)](https://libretranslate.com/)
+[![GitHub Pages](https://img.shields.io/badge/Deployed%20on-GitHub%20Pages-222?style=flat-square&logo=github)](https://pages.github.com/)
+
+</div>
+
+---
+
+## Огляд
+
+Kindalibre Translate викликає **API LibreTranslate** безпосередньо з браузера. Застосунок складається з кількох статичних файлів і не потребує власного сервера, бази даних чи секретів під час збирання
+
+Введіть або вставте текст, виберіть мову перекладу й натисніть **Translate**. Застосунок підтримує автоматичне визначення мови, переклад під час введення, обмін мовами, копіювання, озвучення та понад 50 мов зі списку LibreTranslate
+
+За замовчуванням застосунок використовує `translate.libregalaxy.org`, безплатний сервер спільноти без вимоги до ключа API. У розділі **Settings** можна вказати інший сервер LibreTranslate з підтримкою CORS, зокрема офіційний платний `libretranslate.com` або власну інсталяцію
+
+**Спробувати:** [jarryuser.github.io/kindalibre-translate](https://jarryuser.github.io/kindalibre-translate/)
+
+---
+
+## Можливості
+
+| | Можливість | Деталі |
+|---|---|---|
+| 🌐 | **Понад 50 мов** | Список мов надходить із LibreTranslate через `/languages` |
+| 🔍 | **Автоматичне визначення** | Надсилає `source=auto` і показує визначену мову біля поля оригіналу |
+| 🧩 | **Варіанти перекладу** | Запитує до п’яти варіантів, які можна вибрати під результатом |
+| ⚡ | **Переклад під час введення** | За бажанням перекладає текст після короткої паузи між натисканнями клавіш |
+| 🔀 | **Обмін мовами** | Міняє місцями коди мов і текст одним натисканням |
+| 🔁 | **Сполучення клавіш** | Запускає переклад за допомогою `Ctrl+Enter` або `Cmd+Enter` |
+| 📋 | **Копіювання результату** | Копіює переклад у буфер обміну та коротко показує підтвердження |
+| 🔊 | **Озвучення** | Браузер читає переклад уголос через `speechSynthesis` |
+| 🔢 | **Обмеження довжини** | Отримує `charLimit` від сервера й блокує надто довгі запити |
+| 🔑 | **Необов’язковий ключ API** | Зберігається в `localStorage` і надсилається вибраному серверу |
+| 🖼️ | **Вибір сервера** | Підтримує сервери спільноти та власні інсталяції LibreTranslate |
+| 🤖 | **Режим LLM** | Переклад через OpenAI, Anthropic, Groq, OpenRouter або OpenAI-сумісний сервер із власним ключем API |
+| 🌗 | **Темна й світла теми** | Тема в стилі GitHub зберігається між відвідуваннями |
+
+---
+
+## Технології
+
+| Рівень | Інструмент | Призначення |
+|---|---|---|
+| Мова | TypeScript 5.3 | Сувора типізація відповідей API |
+| Збирання | Vite 5 | Обробка TypeScript і сервер розробки |
+| Переклад | LibreTranslate API | Відкритий вихідний код і підтримка CORS |
+| Хостинг | GitHub Pages | Безплатний статичний хостинг і публікація однією командою |
+
+---
+
+## Як це працює
+
+```
+
+Браузер (GitHub Pages)
+        │
+        ▼
+   GET /languages          → заповнює обидва списки мов
+   GET /frontend/settings  → charLimit, keyRequired
+        │
+        ▼
+   POST /translate {q, source, target, alternatives?, api_key?}
+        │
+        ▼
+   translatedText → поле перекладу
+   alternatives[] → варіанти під результатом
+   detectedLanguage → позначка з визначеною мовою
+```
+
+Браузер надсилає запити безпосередньо серверу LibreTranslate. Сервер налаштовує CORS, наприклад за допомогою заголовка `Access-Control-Allow-Origin: *`, тож застосунку не потрібен проксі
+
+Типова адреса `https://translate.libregalaxy.org` веде до сервера спільноти без ключа API та обмеження кількості символів. Якщо вибраний сервер потребує ключа, введіть його в розділі **Settings**. Браузер збереже його в `localStorage` і надсилатиме в запитах на переклад як `api_key`
+
+### Режим LLM
+
+У меню **Settings → Engine → LLM** виберіть провайдера, наприклад OpenAI, Anthropic, Groq, OpenRouter або локальний сервер, сумісний з OpenAI. Введіть власний ключ API та виберіть модель. Застосунок викликає `/chat/completions` або `/v1/messages` і очікує переклад, можливі варіанти та визначену мову у форматі JSON. Налаштування зберігаються в `localStorage`, ключ надсилається на налаштовану адресу API, а запити оплачуються за умовами провайдера
+
+---
+
+## Початок роботи
+
+```bash
+git clone https://github.com/jarryuser/kindalibre-translate.git
+cd kindalibre-translate
+npm install
+
+npm run dev    # → http://localhost:5173
+```
+
+---
+
+## Публікація
+
+```bash
+npm run deploy
+```
+
+Команда збирає застосунок і публікує вміст `dist/` із файлом `.nojekyll` у гілці `gh-pages`. Вона до п’яти хвилин чекає, поки головна сторінка посилатиметься на новий файл JavaScript і сам файл стане доступним. Інакше команда завершується з помилкою
+
+Для форка налаштуйте `base` у `vite.config.ts` відповідно до шляху на GitHub Pages і задайте `SITE_URL`
+
+---
+
+## Структура проєкту
+
+```
+kindalibre-translate/
+├── index.html                 - головний HTML-файл
+├── public/ - статичні файли
+│   └── .nojekyll              - вимикає обробку Jekyll на GitHub Pages
+├── scripts/ - скрипти
+│   └── deploy.mjs             - публікація та перевірка розгортання
+├── src/ - вихідний код
+│   ├── api.ts                 - клієнт LibreTranslate і зберігання ключів та вибору рушія
+│   ├── llm.ts                 - клієнт LLM і налаштування провайдерів
+│   ├── languages.ts           - список мов для режиму LLM
+│   ├── main.ts                - стан інтерфейсу, перебіг перекладу й сполучення клавіш
+│   └── style.css              - темна та світла теми в стилі GitHub
+├── vite.config.ts             - базовий шлях для GitHub Pages
+└── tsconfig.json
+```
+
+---
+
+## Відомі обмеження
+
+- **Доступність серверів спільноти** - доступність сервера за замовчуванням не гарантована. Якщо він не відповідає, виберіть інший у розділі **Settings**
+- **Офіційний сервер платний** - `libretranslate.com` потребує ключа з `portal.libretranslate.com`. LibreTranslate можна розгорнути на власному сервері без ліцензійної плати
+- **Обмеження режиму LLM** - якість, вартість і ліміт токенів залежать від провайдера й моделі
+- **Обмеження довжини** - додатний `charLimit` перевіряється перед надсиланням запиту. У режимі LLM застосунок не обмежує кількість символів
+- **Озвучення** - доступні голоси й мови залежать від браузера та операційної системи
+
+---
+
+## Як долучитися
+
+Вітаємо повідомлення про проблеми та pull request. Якщо знайшли помилку або маєте ідею для нової функції, спочатку відкрийте issue для обговорення
+
+---
+
+## Ліцензія
+
+MIT © [Dmytro Filiurskyi](https://github.com/jarryuser)
