@@ -88,6 +88,8 @@ V ponuke **Settings → Engine → LLM** vyberte poskytovateľa, napríklad Open
 
 Tlačidlo **Explain meaning** zobrazí prirodzený preklad a v cieľovom jazyku vysvetlí slovnú hračku, ustálený výraz, vtip alebo kultúrny odkaz. Ak sa dá zachovať podobný účinok, ponúkne aj prispôsobenú verziu. Tlačidlo odošle samostatnú požiadavku nastavenému poskytovateľovi
 
+Pred kliknutím na **Explain meaning** označte frázu v zdrojovom texte a aplikácia vysvetlí len túto frázu. Zvyšok textu sa odošle poskytovateľovi ako kontext
+
 ---
 
 ## Začíname

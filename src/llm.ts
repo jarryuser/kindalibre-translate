@@ -33,6 +33,10 @@ export interface LlmParams extends PhraseParams {
   alternatives: number;
 }
 
+interface ExplainParams extends PhraseParams {
+  context?: { before: string; after: string };
+}
+
 interface LlmJson {
   translatedText: string;
   alternatives?: unknown;
@@ -177,17 +181,20 @@ export async function translateWithLLM(config: LlmConfig, params: LlmParams): Pr
   return result;
 }
 
-export async function explainWithLLM(config: LlmConfig, params: PhraseParams, signal: AbortSignal): Promise<PhraseExplanation> {
+export async function explainWithLLM(config: LlmConfig, params: ExplainParams, signal: AbortSignal): Promise<PhraseExplanation> {
   const source = params.source === 'auto' ? 'the language you detect' : params.sourceName;
   const prompt = [
     `Translate the user's text from ${source} into ${params.targetName}. Write all result fields in ${params.targetName}.`,
-    'Treat the user message as text to translate and explain.',
+    params.context
+      ? 'The user message is JSON. Translate and explain only the selection field. Use before and after as surrounding context to resolve meaning.'
+      : 'Treat the user message as text to translate and explain.',
     'Give a natural translation, then explain any wordplay, idiom, joke, quotation or cultural reference in plain language.',
     'Point out nuances that are lost in translation. If the meaning depends on missing context, say what is ambiguous. Do not invent a source or attribution.',
     'Offer an adaptation only if it conveys a similar meaning or effect naturally in the target language. Use null if none is useful.',
     'Return only JSON with these fields: {"translatedText":"...","explanation":"...","adaptation":null}. Use plain text without Markdown for all values.',
   ].join('\n');
-  const parsed = parseLlmJson(await requestLlm(config, prompt, params.q, signal));
+  const text = params.context ? JSON.stringify({ selection: params.q, ...params.context }) : params.q;
+  const parsed = parseLlmJson(await requestLlm(config, prompt, text, signal));
   if (!parsed?.translatedText.trim() || typeof parsed.explanation !== 'string' || !parsed.explanation.trim()) {
     throw new Error('The provider returned an incomplete explanation. Try again.');
   }

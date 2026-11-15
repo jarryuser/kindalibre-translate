@@ -87,6 +87,8 @@ Argos-based LibreTranslate models are mediocre, so **Settings → Engine → LLM
 
 Use **Explain meaning** to get a natural translation and an explanation of wordplay, idioms, jokes or cultural references in the target language. The result includes an adaptation when one works in that language. The button sends a separate request to the configured provider
 
+Select a phrase in the source text before clicking **Explain meaning** to explain just that phrase. The rest of the source text is sent to the provider as context
+
 ---
 
 ## Getting started

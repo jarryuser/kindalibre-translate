@@ -14,6 +14,8 @@ const copyBtn = document.getElementById('copy-btn') as HTMLButtonElement;
 const explainBtn = document.getElementById('explain-btn') as HTMLButtonElement;
 const explanationStatus = document.getElementById('explanation-status') as HTMLElement;
 const explanationResult = document.getElementById('explanation-result') as HTMLElement;
+const explanationExcerpt = document.getElementById('explanation-excerpt') as HTMLElement;
+const explainedExcerpt = document.getElementById('explained-excerpt') as HTMLElement;
 const explainedTranslation = document.getElementById('explained-translation') as HTMLElement;
 const explainedMeaning = document.getElementById('explained-meaning') as HTMLElement;
 const adaptationEl = document.getElementById('adaptation') as HTMLElement;
@@ -226,21 +228,31 @@ function selectedOptionText(select: HTMLSelectElement): string {
 async function explainMeaning(): Promise<void> {
   if (explainBtn.disabled) return;
 
+  const { value, selectionStart, selectionEnd } = sourceText;
+  const selectedText = value.slice(selectionStart, selectionEnd).trim();
+  const before = value.slice(0, selectionStart);
+  const after = value.slice(selectionEnd);
+  const context = selectedText && (before.trim() || after.trim()) ? { before, after } : undefined;
+  const source = sourceSelect.value;
+  const target = targetSelect.value;
   const request = new AbortController();
   explanationRequest = request;
   explanationResult.hidden = true;
   updateExplainButton();
   setExplanationStatus('Explaining…');
-  const target = targetSelect.value;
   try {
     const result = await explainWithLLM(getLlmConfig(), {
-      q: sourceText.value.trim(),
-      source: sourceSelect.value,
+      q: context ? selectedText : value.trim(),
+      context,
+      source,
       sourceName: selectedOptionText(sourceSelect),
       targetName: selectedOptionText(targetSelect),
     }, request.signal);
     if (request.signal.aborted) return;
 
+    explanationExcerpt.hidden = !context;
+    explainedExcerpt.lang = source === AUTO_CODE ? '' : source;
+    explainedExcerpt.textContent = context ? selectedText : '';
     explainedTranslation.lang = explainedMeaning.lang = explainedAdaptation.lang = target;
     explainedTranslation.textContent = result.translatedText;
     explainedMeaning.textContent = result.explanation;

@@ -88,6 +88,8 @@ Wähle unter **Settings → Engine → LLM** einen Anbieter aus, etwa OpenAI, An
 
 Mit **Explain meaning** erhältst du eine natürliche Übersetzung und eine Erklärung von Wortspielen, Redewendungen, Witzen oder kulturellen Anspielungen in der Zielsprache. Wenn sich eine ähnliche Wirkung erzielen lässt, schlägt die App eine passende Fassung vor. Die Schaltfläche sendet eine eigene Anfrage an den eingestellten Anbieter
 
+Markiere vor dem Klick auf **Explain meaning** eine Wendung im Ausgangstext, um nur diese Wendung erklären zu lassen. Der übrige Text wird als Kontext an den Anbieter gesendet
+
 ---
 
 ## Erste Schritte
