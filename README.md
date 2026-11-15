@@ -85,6 +85,8 @@ The app defaults to `https://translate.libregalaxy.org`, a free community mirror
 
 Argos-based LibreTranslate models are mediocre, so **Settings → Engine → LLM** swaps the backend for a large language model of your choice. Pick a provider (OpenAI, Anthropic, Groq, OpenRouter or any OpenAI-compatible endpoint incl. local servers), paste your API key, pick a model. The app sends a single `/chat/completions` or `/v1/messages` request that returns the translation (plus alternatives and auto-detected language) as JSON. Settings are stored in `localStorage`. The API key is sent to the configured endpoint, and calls are billed according to the provider’s terms
 
+Use **Explain meaning** to get a natural translation and an explanation of wordplay, idioms, jokes or cultural references in the target language. The result includes an adaptation when one works in that language. The button sends a separate request to the configured provider
+
 ---
 
 ## Getting started

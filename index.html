@@ -80,14 +80,30 @@
         </div>
 
         <div class="pane">
-          <div class="pane-toolbar">
+          <div class="pane-toolbar result-toolbar">
             <span id="status-badge" class="status-badge">Idle</span>
             <span class="pane-spacer"></span>
+            <button id="explain-btn" class="btn btn-mini" type="button" aria-controls="explanation-result" hidden disabled>Explain meaning</button>
             <button id="copy-btn" class="btn btn-mini" title="Copy translation">Copy</button>
             <button id="speak-btn" class="btn btn-mini" title="Listen to translation">Listen</button>
           </div>
           <textarea id="target-text" class="textarea textarea-readonly" placeholder="Translation appears here" readonly spellcheck="false"></textarea>
           <div id="alternatives" class="alternatives"></div>
+          <p id="explanation-status" class="explanation-status" role="status"></p>
+          <dl id="explanation-result" class="explanation-result" hidden>
+            <div>
+              <dt>Natural translation</dt>
+              <dd id="explained-translation" dir="auto"></dd>
+            </div>
+            <div>
+              <dt>Explanation</dt>
+              <dd id="explained-meaning" dir="auto"></dd>
+            </div>
+            <div id="adaptation" hidden>
+              <dt>Adaptation</dt>
+              <dd id="explained-adaptation" dir="auto"></dd>
+            </div>
+          </dl>
           <div class="pane-footer">
             <span id="error-msg" class="error-msg"></span>
           </div>

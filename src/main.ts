@@ -1,5 +1,5 @@
 import { AUTO_CODE, DEFAULT_INSTANCE, fetchLanguages, fetchSettings, getApiKey, getApiUrl, getEngine, getLlmConfig, saveApiKey, saveApiUrl, saveEngine, saveLlmConfig, translate, type Engine, type Language, type TranslateResult } from './api.js';
-import { LLM_PROVIDERS, translateWithLLM } from './llm.js';
+import { explainWithLLM, LLM_PROVIDERS, translateWithLLM } from './llm.js';
 import { STATIC_LANGUAGES } from './languages.js';
 
 const sourceSelect = document.getElementById('source-lang') as HTMLSelectElement;
@@ -11,6 +11,13 @@ const alternativesCountEl = document.getElementById('alternatives-count') as HTM
 const translateBtn = document.getElementById('translate-btn') as HTMLButtonElement;
 const swapBtn = document.getElementById('swap-btn') as HTMLButtonElement;
 const copyBtn = document.getElementById('copy-btn') as HTMLButtonElement;
+const explainBtn = document.getElementById('explain-btn') as HTMLButtonElement;
+const explanationStatus = document.getElementById('explanation-status') as HTMLElement;
+const explanationResult = document.getElementById('explanation-result') as HTMLElement;
+const explainedTranslation = document.getElementById('explained-translation') as HTMLElement;
+const explainedMeaning = document.getElementById('explained-meaning') as HTMLElement;
+const adaptationEl = document.getElementById('adaptation') as HTMLElement;
+const explainedAdaptation = document.getElementById('explained-adaptation') as HTMLElement;
 const speakBtn = document.getElementById('speak-btn') as HTMLButtonElement;
 const clearBtn = document.getElementById('clear-btn') as HTMLButtonElement;
 const liveToggle = document.getElementById('live-toggle') as HTMLInputElement;
@@ -48,6 +55,7 @@ let lastRequestId = 0;
 let altOptions: string[] = [];
 let alternativesCount = 3;
 let engine: Engine = getEngine();
+let explanationRequest: AbortController | undefined;
 
 function langName(code: string): string {
   if (code === AUTO_CODE) return 'Auto detect';
@@ -69,6 +77,24 @@ function setStatus(state: 'idle' | 'busy' | 'done' | 'error', text: string): voi
 
 function setError(text: string): void {
   errorMsg.textContent = text;
+}
+
+function updateExplainButton(): void {
+  explainBtn.disabled = Boolean(explanationRequest) || explainBtn.hidden || !sourceText.value.trim()
+    || !sourceSelect.value || !targetSelect.value || sourceSelect.value === targetSelect.value;
+}
+
+function setExplanationStatus(message: string, error = false): void {
+  explanationStatus.classList.toggle('error', error);
+  explanationStatus.textContent = message;
+}
+
+function resetExplanation(): void {
+  explanationRequest?.abort();
+  explanationRequest = undefined;
+  explanationResult.hidden = true;
+  setExplanationStatus('');
+  updateExplainButton();
 }
 
 function renderAlternatives(): void {
@@ -142,6 +168,7 @@ function populateSelects(): void {
   const target = localStorage.getItem(TARGET_STORAGE) ?? DEFAULT_TARGET;
   if (list.some((l) => l.code === source)) sourceSelect.value = source;
   if (list.some((l) => l.code === target)) targetSelect.value = target;
+  updateExplainButton();
 }
 
 function renderFooter(): void {
@@ -194,6 +221,41 @@ async function loadSettings(): Promise<void> {
 
 function selectedOptionText(select: HTMLSelectElement): string {
   return select.options[select.selectedIndex]?.text ?? select.value;
+}
+
+async function explainMeaning(): Promise<void> {
+  if (explainBtn.disabled) return;
+
+  const request = new AbortController();
+  explanationRequest = request;
+  explanationResult.hidden = true;
+  updateExplainButton();
+  setExplanationStatus('Explaining…');
+  const target = targetSelect.value;
+  try {
+    const result = await explainWithLLM(getLlmConfig(), {
+      q: sourceText.value.trim(),
+      source: sourceSelect.value,
+      sourceName: selectedOptionText(sourceSelect),
+      targetName: selectedOptionText(targetSelect),
+    }, request.signal);
+    if (request.signal.aborted) return;
+
+    explainedTranslation.lang = explainedMeaning.lang = explainedAdaptation.lang = target;
+    explainedTranslation.textContent = result.translatedText;
+    explainedMeaning.textContent = result.explanation;
+    explainedAdaptation.textContent = result.adaptation ?? '';
+    adaptationEl.hidden = !result.adaptation;
+    explanationResult.hidden = false;
+    setExplanationStatus('');
+  } catch (err) {
+    if (!request.signal.aborted) setExplanationStatus(err instanceof Error ? err.message : String(err), true);
+  } finally {
+    if (explanationRequest === request) {
+      explanationRequest = undefined;
+      updateExplainButton();
+    }
+  }
 }
 
 function runTranslate(text: string, source: string, target: string, alternatives: number): Promise<TranslateResult> {
@@ -262,6 +324,7 @@ function swapLanguages(): void {
   targetSelect.value = src === AUTO_CODE ? DEFAULT_TARGET : src;
   sourceText.value = targetText.value;
   targetText.value = '';
+  resetExplanation();
   altOptions = [];
   renderAlternatives();
   detectedBadge.textContent = '';
@@ -307,6 +370,8 @@ function applyEngineVisibility(): void {
   const llm = engine === 'llm';
   ltSettingsEl.hidden = llm;
   llmSettingsEl.hidden = !llm;
+  explainBtn.hidden = !llm;
+  resetExplanation();
 }
 
 function fillLlmProviders(): void {
@@ -394,10 +459,12 @@ function init(): void {
   translateBtn.addEventListener('click', () => doTranslate());
   swapBtn.addEventListener('click', swapLanguages);
   copyBtn.addEventListener('click', copyResult);
+  explainBtn.addEventListener('click', explainMeaning);
   speakBtn.addEventListener('click', speakResult);
   clearBtn.addEventListener('click', () => {
     window.clearTimeout(debounceTimer);
     sourceText.value = '';
+    resetExplanation();
     doTranslate();
     updateCharCounter();
     sourceText.focus();
@@ -418,17 +485,18 @@ function init(): void {
     localStorage.setItem(ALT_STORAGE, alternativesCountEl.value);
   });
 
-  sourceText.addEventListener('input', updateCharCounter);
   sourceSelect.addEventListener('change', () => {
     if (targetSelect.value === sourceSelect.value && sourceSelect.value !== AUTO_CODE) {
       const fallback = Array.from(targetSelect.options).find((o) => o.value !== sourceSelect.value && o.value !== AUTO_CODE);
       targetSelect.value = fallback ? fallback.value : DEFAULT_TARGET;
     }
+    resetExplanation();
     detectedBadge.textContent = '';
     saveSelection();
     if (liveToggle.checked) doTranslate();
   });
   targetSelect.addEventListener('change', () => {
+    resetExplanation();
     saveSelection();
     if (liveToggle.checked) doTranslate();
   });
@@ -445,6 +513,8 @@ function init(): void {
     if (liveToggle.checked) doTranslate();
   });
   sourceText.addEventListener('input', () => {
+    resetExplanation();
+    updateCharCounter();
     if (!liveToggle.checked) return;
     window.clearTimeout(debounceTimer);
     debounceTimer = window.setTimeout(() => doTranslate(), 600);

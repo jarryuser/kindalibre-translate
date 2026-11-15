@@ -86,6 +86,8 @@ Die Standardadresse ist `https://translate.libregalaxy.org`, ein Community-Serve
 
 Wähle unter **Settings → Engine → LLM** einen Anbieter aus, etwa OpenAI, Anthropic, Groq, OpenRouter oder einen lokalen OpenAI-kompatiblen Server. Gib deinen API-Schlüssel und das gewünschte Modell an. Die App ruft `/chat/completions` oder `/v1/messages` auf und erwartet die Übersetzung, mögliche Varianten und die erkannte Sprache als JSON. Die Einstellungen bleiben in `localStorage`, der Schlüssel wird an die konfigurierte API-Adresse gesendet und der Anbieter rechnet die Anfragen über deinen Schlüssel ab
 
+Mit **Explain meaning** erhältst du eine natürliche Übersetzung und eine Erklärung von Wortspielen, Redewendungen, Witzen oder kulturellen Anspielungen in der Zielsprache. Wenn sich eine ähnliche Wirkung erzielen lässt, schlägt die App eine passende Fassung vor. Die Schaltfläche sendet eine eigene Anfrage an den eingestellten Anbieter
+
 ---
 
 ## Erste Schritte

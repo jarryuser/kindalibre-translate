@@ -86,6 +86,8 @@ Predvolená adresa `https://translate.libregalaxy.org` patrí komunitnému serve
 
 V ponuke **Settings → Engine → LLM** vyberte poskytovateľa, napríklad OpenAI, Anthropic, Groq, OpenRouter alebo lokálny server kompatibilný s OpenAI. Potom zadajte vlastný API kľúč a vyberte model. Aplikácia zavolá `/chat/completions` alebo `/v1/messages` a očakáva JSON s prekladom, prípadnými variantmi a rozpoznaným jazykom. Nastavenia sa ukladajú v `localStorage`, kľúč sa posiela na nastavenú adresu API a požiadavky sa účtujú podľa podmienok poskytovateľa
 
+Tlačidlo **Explain meaning** zobrazí prirodzený preklad a v cieľovom jazyku vysvetlí slovnú hračku, ustálený výraz, vtip alebo kultúrny odkaz. Ak sa dá zachovať podobný účinok, ponúkne aj prispôsobenú verziu. Tlačidlo odošle samostatnú požiadavku nastavenému poskytovateľovi
+
 ---
 
 ## Začíname

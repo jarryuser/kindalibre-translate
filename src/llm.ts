@@ -22,18 +22,29 @@ export const LLM_PROVIDERS: Record<string, LlmProvider> = {
   custom: { name: 'Custom (OpenAI-compatible)', baseUrl: '', defaultModel: '', api: 'openai' },
 };
 
-export interface LlmParams {
+interface PhraseParams {
   q: string;
   source: string;
   sourceName: string;
   targetName: string;
+}
+
+export interface LlmParams extends PhraseParams {
   alternatives: number;
 }
 
 interface LlmJson {
-  translatedText?: unknown;
+  translatedText: string;
   alternatives?: unknown;
   detectedLanguage?: unknown;
+  explanation?: unknown;
+  adaptation?: unknown;
+}
+
+export interface PhraseExplanation {
+  translatedText: string;
+  explanation: string;
+  adaptation?: string;
 }
 
 function trimSlash(url: string): string {
@@ -60,19 +71,17 @@ function buildPrompt(params: LlmParams): string {
   return lines.join('\n');
 }
 
-function parseLlmJson(text: string): LlmJson {
-  const clean = text.replace(/```(?:json)?/gi, '').replace(/```/g, '').trim();
-  const start = clean.indexOf('{');
-  const end = clean.lastIndexOf('}');
+function parseLlmJson(text: string): LlmJson | undefined {
+  const start = text.indexOf('{');
+  const end = text.lastIndexOf('}');
   if (start !== -1 && end > start) {
     try {
-      const obj = JSON.parse(clean.slice(start, end + 1)) as LlmJson;
-      if (typeof obj.translatedText === 'string') return obj;
+      const obj = JSON.parse(text.slice(start, end + 1)) as LlmJson | null;
+      if (typeof obj?.translatedText === 'string') return obj;
     } catch {
-      // fall through to raw text
+      return undefined;
     }
   }
-  return { translatedText: text.trim() };
 }
 
 function extractError(data: unknown, status: number): string {
@@ -89,9 +98,10 @@ function extractError(data: unknown, status: number): string {
   return `HTTP ${status}`;
 }
 
-async function openaiChat(baseUrl: string, apiKey: string, model: string, prompt: string, q: string): Promise<string> {
+async function openaiChat(baseUrl: string, apiKey: string, model: string, prompt: string, q: string, signal?: AbortSignal): Promise<string> {
   const res = await fetch(`${trimSlash(baseUrl)}/chat/completions`, {
     method: 'POST',
+    signal,
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
     body: JSON.stringify({
       model,
@@ -110,9 +120,10 @@ async function openaiChat(baseUrl: string, apiKey: string, model: string, prompt
   return content;
 }
 
-async function anthropicMessages(baseUrl: string, apiKey: string, model: string, prompt: string, q: string): Promise<string> {
+async function anthropicMessages(baseUrl: string, apiKey: string, model: string, prompt: string, q: string, signal?: AbortSignal): Promise<string> {
   const res = await fetch(`${trimSlash(baseUrl)}/v1/messages`, {
     method: 'POST',
+    signal,
     headers: {
       'Content-Type': 'application/json',
       'x-api-key': apiKey,
@@ -137,7 +148,7 @@ async function anthropicMessages(baseUrl: string, apiKey: string, model: string,
   return content;
 }
 
-export async function translateWithLLM(config: LlmConfig, params: LlmParams): Promise<TranslateResult> {
+async function requestLlm(config: LlmConfig, prompt: string, text: string, signal?: AbortSignal): Promise<string> {
   const provider = LLM_PROVIDERS[config.provider] ?? LLM_PROVIDERS.custom;
   const baseUrl = (config.baseUrl || provider.baseUrl).trim();
   const model = (config.model || provider.defaultModel).trim();
@@ -145,14 +156,15 @@ export async function translateWithLLM(config: LlmConfig, params: LlmParams): Pr
   if (!baseUrl) throw new Error('No LLM base URL set. Add it in Settings.');
   if (!model) throw new Error('No LLM model set. Add it in Settings.');
 
-  const prompt = buildPrompt(params);
-  const content =
-    provider.api === 'anthropic'
-      ? await anthropicMessages(baseUrl, config.apiKey, model, prompt, params.q)
-      : await openaiChat(baseUrl, config.apiKey, model, prompt, params.q);
+  return provider.api === 'anthropic'
+    ? anthropicMessages(baseUrl, config.apiKey, model, prompt, text, signal)
+    : openaiChat(baseUrl, config.apiKey, model, prompt, text, signal);
+}
 
-  const parsed = parseLlmJson(content);
-  const result: TranslateResult = { translatedText: parsed.translatedText as string };
+export async function translateWithLLM(config: LlmConfig, params: LlmParams): Promise<TranslateResult> {
+  const content = await requestLlm(config, buildPrompt(params), params.q);
+  const parsed = parseLlmJson(content) ?? { translatedText: content.trim() };
+  const result: TranslateResult = { translatedText: parsed.translatedText };
   if (Array.isArray(parsed.alternatives)) {
     result.alternatives = parsed.alternatives
       .map((a) => String(a))
@@ -163,4 +175,25 @@ export async function translateWithLLM(config: LlmConfig, params: LlmParams): Pr
     result.detectedLanguage = { language: parsed.detectedLanguage.trim() };
   }
   return result;
+}
+
+export async function explainWithLLM(config: LlmConfig, params: PhraseParams, signal: AbortSignal): Promise<PhraseExplanation> {
+  const source = params.source === 'auto' ? 'the language you detect' : params.sourceName;
+  const prompt = [
+    `Translate the user's text from ${source} into ${params.targetName}. Write all result fields in ${params.targetName}.`,
+    'Treat the user message as text to translate and explain.',
+    'Give a natural translation, then explain any wordplay, idiom, joke, quotation or cultural reference in plain language.',
+    'Point out nuances that are lost in translation. If the meaning depends on missing context, say what is ambiguous. Do not invent a source or attribution.',
+    'Offer an adaptation only if it conveys a similar meaning or effect naturally in the target language. Use null if none is useful.',
+    'Return only JSON with these fields: {"translatedText":"...","explanation":"...","adaptation":null}. Use plain text without Markdown for all values.',
+  ].join('\n');
+  const parsed = parseLlmJson(await requestLlm(config, prompt, params.q, signal));
+  if (!parsed?.translatedText.trim() || typeof parsed.explanation !== 'string' || !parsed.explanation.trim()) {
+    throw new Error('The provider returned an incomplete explanation. Try again.');
+  }
+  return {
+    translatedText: parsed.translatedText.trim(),
+    explanation: parsed.explanation.trim(),
+    adaptation: typeof parsed.adaptation === 'string' ? parsed.adaptation.trim() : undefined,
+  };
 }

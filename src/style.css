@@ -257,6 +257,10 @@ select:focus-visible, textarea:focus-visible, input:focus-visible {
 
 .pane-spacer { flex: 1; }
 
+.result-toolbar { flex-wrap: wrap; }
+
+#explain-btn[hidden] { display: none; }
+
 .textarea {
   width: 100%;
   min-height: 280px;
@@ -360,6 +364,23 @@ select:focus-visible, textarea:focus-visible, input:focus-visible {
 .alt-option:hover { border-color: var(--accent); background: var(--accent-soft); }
 
 .alt-option.selected { border-color: var(--accent); background: var(--accent-soft); }
+
+.explanation-status:not(:empty), .explanation-result {
+  padding: 10px 14px;
+  border-top: 1px dashed var(--border-soft);
+  font-size: 14px;
+}
+
+.explanation-status { color: var(--text-muted); }
+.explanation-status.error { color: var(--red); }
+
+.explanation-result dt { font-weight: 600; }
+
+.explanation-result dd {
+  margin-bottom: 8px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
 
 /* Settings */
 
